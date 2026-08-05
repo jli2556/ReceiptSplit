@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#c9d1d7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="小账本">
-<title>如宝 ♡ 元宝 的小账本</title>
+<title>小账本</title>
 <style>
 :root{
   --ink:#15181c; --soft:#5d6670; --faint:#98a1aa;
@@ -41,6 +41,7 @@ h1{margin:5px 0 0; font-family:var(--mono); font-size:26px; font-weight:600; let
 .name-in{width:78px; border:0; background:none; font-family:var(--mono); font-size:15px;
   font-weight:600; letter-spacing:.06em; padding:2px 0}
 .name-in.a{color:var(--a)} .name-in.b{color:var(--b)}
+.name-in[readonly]{opacity:.65; cursor:default}
 
 .grid{max-width:1080px; margin:0 auto; display:grid;
   grid-template-columns:minmax(0,1fr) 340px; gap:26px; align-items:start}
@@ -316,8 +317,10 @@ h1{margin:5px 0 0; font-family:var(--mono); font-size:26px; font-weight:600; let
 /* ---------------------------------------------------------------- */
 
 var LS = "rubao-yuanbao-ledger-v1";
+var LOCKED = { a: "我", b: "你" };
 var S = {
-  names: { a: "如宝", b: "元宝" },
+  names: { a: "我", b: "你" },
+  unlocked: false,
   history: [],
   tombstones: {},
   key: "",
@@ -327,6 +330,8 @@ var S = {
   rev: 0,
   r: blank()
 };
+
+function N() { return S.unlocked ? S.names : LOCKED; }
 
 function blank() {
   return {
@@ -359,7 +364,8 @@ function save() {
   saveTimer = setTimeout(function () {
     try {
       localStorage.setItem(LS, JSON.stringify({
-        names: S.names, history: S.history, tombstones: S.tombstones,
+        names: hasBackend() ? null : S.names,
+        history: S.history, tombstones: S.tombstones,
         key: S.key, model: S.model, backend: S.backend, pass: S.pass,
         rev: S.rev, draft: S.r
       }));
@@ -543,6 +549,7 @@ function pull(quiet) {
     .then(function (remote) {
       mergeInto(remote);
       S.rev = remote.rev || 0;
+      S.unlocked = true;
       renderAll(); save();
       setSync("已同步 · " + new Date().toTimeString().slice(0, 5), "live");
     })
@@ -666,8 +673,9 @@ function segEl(getVal, setVal, omitBoth) {
     var v = getVal();
     Array.prototype.forEach.call(wrap.children, function (b) {
       var k = b.dataset.k;
-      b.textContent = k === "both" ? "半" : (S.names[k] || "").slice(0, 1) || k.toUpperCase();
-      b.title = k === "both" ? "对半分" : S.names[k];
+      var nm = N();
+      b.textContent = k === "both" ? "半" : (nm[k] || "").slice(0, 1) || k.toUpperCase();
+      b.title = k === "both" ? "对半分" : nm[k];
       b.className = v === k ? "on " + k : "";
     });
   };
@@ -783,7 +791,7 @@ function renderHistory() {
 }
 
 function refresh() {
-  var c = compute(), n = S.names;
+  var c = compute(), n = N();
 
   $("eyebrow").textContent = n.a + " ♡ " + n.b + " 的小账本";
   $("pnA").textContent = n.a;
@@ -851,8 +859,13 @@ function refresh() {
 }
 
 function renderAll() {
-  $("nameA").value = S.names.a;
-  $("nameB").value = S.names.b;
+  var nm = N();
+  ["a", "b"].forEach(function (k) {
+    var el = $(k === "a" ? "nameA" : "nameB");
+    el.value = nm[k];
+    el.readOnly = !S.unlocked;
+    el.title = S.unlocked ? "点一下就能改" : "输入口令后显示";
+  });
   $("merch").value = S.r.merchant;
   $("date").value = S.r.date;
   renderItems();
@@ -873,7 +886,8 @@ payerSeg.id = "payerSeg";
 ["a", "b"].forEach(function (k) {
   var el = $(k === "a" ? "nameA" : "nameB");
   el.addEventListener("input", function () {
-    S.names[k] = el.value || (k === "a" ? "如宝" : "元宝");
+    if (!S.unlocked) { el.value = LOCKED[k]; return; }
+    S.names[k] = el.value || LOCKED[k];
     S.namesTouched = true;
     refresh(); save(); schedulePush();
   });
@@ -1002,11 +1016,18 @@ function setMsg(m, bad) {
 
 $("backend").addEventListener("input", function () {
   S.backend = this.value.trim().replace(/\/+$/, "");
-  save(); updateSyncLabel();
+  if (!hasBackend()) S.unlocked = true;
+  save(); renderAll(); updateSyncLabel();
 });
+var passTimer = null;
 $("pass").addEventListener("input", function () {
   S.pass = this.value;
-  save(); updateSyncLabel();
+  S.unlocked = false;
+  save(); renderAll(); updateSyncLabel();
+  clearTimeout(passTimer);
+  passTimer = setTimeout(function () {
+    if (hasBackend()) pull(true).then(function () { renderAll(); updateSyncLabel(); });
+  }, 900);
 });
 
 $("testBtn").addEventListener("click", function () {
@@ -1035,7 +1056,9 @@ $("pullBtn").addEventListener("click", function () {
 });
 
 function updateSyncLabel() {
+  S.unlocked = !hasBackend() || S.unlocked;
   if (!hasBackend()) setSync("本机模式 · 不同步");
+  else if (!S.unlocked) setSync("填对口令后显示名字并同步");
 }
 
 /* 起飞 */
@@ -1044,6 +1067,7 @@ $("apiKey").value = S.key;
 $("model").value = S.model;
 $("backend").value = S.backend;
 $("pass").value = S.pass;
+S.unlocked = !hasBackend();
 renderAll();
 updateSyncLabel();
 
