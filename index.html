@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#c9d1d7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="小账本">
+<title>如宝 ♡ 元宝 的小账本</title>
+<style>
+:root{
+  --ink:#15181c; --soft:#5d6670; --faint:#98a1aa;
+  --tape:#fcfbf7; --rule:#cdc6b6;
+  --a:#b03a5b; --b:#1d5fa8; --both:#6b4e93;
+  --alert:#b03a5b; --good:#2b7457;
+  --cjk:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC","Source Han Sans SC";
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",var(--cjk),monospace;
+  --sans:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,var(--cjk),sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0; padding:0; min-height:100%}
+body{
+  padding:26px 20px calc(48px + env(safe-area-inset-bottom));
+  background:linear-gradient(170deg,#d8dee2 0%,#c3ccd3 100%); background-attachment:fixed;
+  color:var(--ink); font-family:var(--sans); font-size:16px; -webkit-text-size-adjust:100%;
+}
+button{font-family:inherit; cursor:pointer}
+input,select{font-family:inherit; color:inherit}
+:focus-visible{outline:2px solid var(--ink); outline-offset:2px; border-radius:2px}
+[hidden]{display:none !important}
+
+.top{max-width:1080px; margin:0 auto 22px; display:flex; flex-wrap:wrap; gap:16px;
+  align-items:flex-end; justify-content:space-between}
+.eyebrow{font-family:var(--mono); font-size:14px; letter-spacing:.16em; color:var(--soft)}
+h1{margin:5px 0 0; font-family:var(--mono); font-size:26px; font-weight:600; letter-spacing:.12em}
+.who{display:flex; gap:10px}
+.who-f{display:flex; align-items:center; gap:7px; background:rgba(255,255,255,.55);
+  border:1px solid rgba(21,24,28,.12); border-radius:999px; padding:5px 13px 5px 10px}
+.dot{width:9px; height:9px; border-radius:50%; flex:none}
+.dot.a{background:var(--a)} .dot.b{background:var(--b)}
+.name-in{width:78px; border:0; background:none; font-family:var(--mono); font-size:15px;
+  font-weight:600; letter-spacing:.06em; padding:2px 0}
+.name-in.a{color:var(--a)} .name-in.b{color:var(--b)}
+
+.grid{max-width:1080px; margin:0 auto; display:grid;
+  grid-template-columns:minmax(0,1fr) 340px; gap:26px; align-items:start}
+
+/* ---- 小票纸带 ---- */
+.tape-wrap{filter:drop-shadow(0 10px 22px rgba(20,30,40,.22))}
+.edge{height:9px; background:var(--tape)}
+.top-edge{-webkit-mask:conic-gradient(from 135deg at top,#0000,#000 1deg 89deg,#0000 90deg) 50%/13px 100% repeat-x;
+  mask:conic-gradient(from 135deg at top,#0000,#000 1deg 89deg,#0000 90deg) 50%/13px 100% repeat-x}
+.bot-edge{-webkit-mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/13px 100% repeat-x;
+  mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/13px 100% repeat-x}
+.tape{background:var(--tape); padding:22px 26px 26px; font-family:var(--mono); font-size:15px}
+
+.head{display:flex; gap:12px; align-items:baseline; justify-content:space-between}
+.merch{flex:1; min-width:0; border:0; background:none; font-family:var(--mono); font-size:20px;
+  font-weight:600; letter-spacing:.14em; padding:0}
+.merch::placeholder{color:var(--faint)}
+.date{border:0; background:none; font-family:var(--mono); font-size:14px; color:var(--soft); padding:0}
+
+.rule{height:0; border-top:1px dashed var(--rule); margin:14px 0}
+.rule.bold{border-top:4px double var(--ink); margin:12px 0}
+
+.items{list-style:none; margin:0; padding:0}
+.item{padding:7px 0; border-bottom:1px dotted rgba(205,198,182,.7);
+  animation:printIn .3s ease-out both}
+@keyframes printIn{from{opacity:0; transform:translateY(-5px)} to{opacity:1; transform:none}}
+.line{display:flex; align-items:center; gap:8px}
+.line.sub{margin-top:5px}
+.iname{flex:0 1 auto; min-width:70px; border:0; background:none; font-family:var(--mono);
+  font-size:15px; padding:1px 2px; border-radius:2px}
+.iname:hover{background:rgba(21,24,28,.05)}
+.qty{color:var(--soft); font-size:13px; flex:none}
+.leader{flex:1 1 auto; min-width:14px; border-bottom:1px dotted var(--rule); transform:translateY(-3px)}
+.leader.thin{border-bottom-style:none}
+.price{flex:none; font-variant-numeric:tabular-nums; font-weight:600}
+.price.a .num{color:var(--a)} .price.b .num{color:var(--b)} .price.both .num{color:var(--both)}
+.num{width:84px; text-align:right; border:0; background:none; font-family:var(--mono);
+  font-size:15px; font-weight:600; font-variant-numeric:tabular-nums; padding:1px 2px;
+  border-radius:2px; color:inherit}
+.num:hover{background:rgba(21,24,28,.05)}
+.split-note{font-size:13px; color:var(--soft); flex:none}
+.x{border:0; background:none; color:var(--faint); font-size:13px; padding:2px 4px; line-height:1}
+.x:hover{color:var(--alert)}
+
+.seg{display:inline-flex; border:1px solid rgba(21,24,28,.2); border-radius:3px; overflow:hidden; flex:none}
+.seg button{border:0; background:none; padding:3px 11px; font-family:var(--mono); font-size:14px;
+  font-weight:600; color:var(--soft); border-right:1px solid rgba(21,24,28,.12); transition:.14s}
+.seg button:last-child{border-right:0}
+.seg button:hover{background:rgba(21,24,28,.06)}
+.seg button.on{color:#fff}
+.seg button.on.a{background:var(--a)} .seg button.on.b{background:var(--b)}
+.seg button.on.both{background:var(--both)}
+
+.add-line{border:0; background:none; font-family:var(--mono); font-size:14px; color:var(--soft);
+  padding:9px 2px; letter-spacing:.08em}
+.add-line:hover{color:var(--ink)}
+
+.adj .line{padding:4px 0}
+.lbl{flex:none; color:var(--soft); font-size:14px}
+.allot{margin:9px 0 0; font-size:13px; color:var(--faint)}
+.total .lbl{color:var(--ink); font-weight:700; letter-spacing:.3em; font-size:15px}
+.price.big{font-size:22px; font-weight:700}
+
+.warn{margin-top:12px; padding:10px 12px; background:rgba(176,58,91,.07);
+  border-left:3px solid var(--alert); font-size:14px; line-height:1.7; font-family:var(--sans)}
+.stars{margin-top:22px; text-align:center; font-size:13px; letter-spacing:.1em; color:var(--faint)}
+
+.printing{display:flex; align-items:center; gap:5px; padding:8px 0; color:var(--soft)}
+.printing i{width:5px; height:5px; border-radius:50%; background:var(--soft); animation:blink 1s infinite}
+.printing i:nth-child(2){animation-delay:.16s} .printing i:nth-child(3){animation-delay:.32s}
+.printing em{margin-left:6px; font-size:14px; letter-spacing:.14em; font-style:normal}
+@keyframes blink{0%,100%{opacity:.25} 50%{opacity:1}}
+
+.empty{text-align:center; padding:44px 18px 40px; font-family:var(--sans)}
+.empty-mark{font-family:var(--mono); font-size:23px; letter-spacing:.4em; color:var(--rule)}
+.empty h2{margin:16px 0 8px; font-family:var(--mono); font-size:20px; letter-spacing:.14em; font-weight:600}
+.empty p{margin:0 auto 20px; max-width:360px; font-size:15px; line-height:1.9; color:var(--soft)}
+.empty .btn{margin:0 4px 8px}
+
+/* ---- 右栏 ---- */
+.side{display:flex; flex-direction:column; gap:14px; position:sticky; top:20px}
+.card{background:rgba(255,255,255,.62); border:1px solid rgba(21,24,28,.1);
+  border-radius:5px; padding:15px}
+.card-h{font-family:var(--mono); font-size:13px; letter-spacing:.26em; color:var(--soft);
+  margin-bottom:12px; display:flex; justify-content:space-between; align-items:center}
+.card-h button{border:0; background:none; font-family:var(--mono); font-size:13px;
+  color:var(--faint); letter-spacing:0; padding:0}
+.card-h button:hover{color:var(--ink)}
+.person{display:grid; grid-template-columns:1fr auto; gap:2px 8px; margin-bottom:14px}
+.p-name{font-family:var(--mono); font-size:15px; font-weight:600; letter-spacing:.08em}
+.person.a .p-name{color:var(--a)} .person.b .p-name{color:var(--b)}
+.p-amt{font-family:var(--mono); font-size:22px; font-weight:700; font-variant-numeric:tabular-nums}
+.bar{grid-column:1/-1; height:4px; background:rgba(21,24,28,.1); border-radius:2px;
+  overflow:hidden; margin:5px 0 3px}
+.bar i{display:block; height:100%; transition:width .25s ease}
+.person.a .bar i{background:var(--a)} .person.b .bar i{background:var(--b)}
+.p-sub{grid-column:1/-1; font-size:13px; color:var(--soft)}
+.payer{display:flex; align-items:center; justify-content:space-between; gap:8px; padding-top:12px;
+  border-top:1px dashed rgba(21,24,28,.15); font-size:14px; color:var(--soft)}
+.verdict{margin:11px 0 13px; font-family:var(--mono); font-size:16px; font-weight:600; line-height:1.6}
+.balance{margin:0 0 12px; font-family:var(--mono); font-size:17px; font-weight:600; line-height:1.6}
+
+.btn{border:1px solid var(--ink); background:none; color:var(--ink); border-radius:3px;
+  padding:8px 15px; font-family:var(--mono); font-size:14px; font-weight:600;
+  letter-spacing:.12em; transition:.15s}
+.btn:hover:not(:disabled){background:var(--ink); color:var(--tape)}
+.btn:disabled{opacity:.35; cursor:not-allowed}
+.btn.primary{background:var(--ink); color:var(--tape)}
+.btn.primary:hover:not(:disabled){background:#000}
+.btn.ghost{border-color:rgba(21,24,28,.25); color:var(--soft)}
+.btn.wide{display:block; width:100%; margin-bottom:8px}
+.btn.tiny{padding:4px 10px; font-size:13px; letter-spacing:.06em; margin:8px 6px 0 0}
+
+.hist{list-style:none; margin:0 0 12px; padding:0; max-height:230px; overflow:auto}
+.hist li{display:flex; align-items:center; gap:8px; padding:6px 0; font-size:14px;
+  border-bottom:1px dotted rgba(21,24,28,.13)}
+.h-day{font-family:var(--mono); font-size:13px; color:var(--faint); flex:none}
+.h-name{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.h-amt{font-family:var(--mono); font-variant-numeric:tabular-nums; flex:none}
+.sync{margin:-6px 0 12px; font-size:13px; color:var(--faint)}
+.sync.bad{color:var(--alert)} .sync.live{color:var(--good)}
+.confirm{font-size:14px; color:var(--soft); line-height:1.8}
+.note{margin:8px 0 0; font-size:13px; color:var(--faint); line-height:1.7}
+.note a{color:var(--soft)}
+.ok{margin:0 0 4px; font-size:13px; color:var(--good)}
+.err{margin:9px 0 0; font-size:14px; color:var(--alert); line-height:1.7}
+.field{display:block; margin-bottom:9px}
+.field span{display:block; font-size:13px; color:var(--soft); margin-bottom:4px}
+.field input,.field select{width:100%; padding:7px 9px; font-size:14px; border-radius:3px;
+  border:1px solid rgba(21,24,28,.2); background:rgba(255,255,255,.75); font-family:var(--mono)}
+.row2{display:flex; gap:8px}
+.row2 .btn{flex:1; margin-bottom:8px}
+
+@media (max-width:860px){
+  body{padding:20px 14px 40px}
+  .grid{grid-template-columns:1fr; gap:18px}
+  .side{position:static}
+  .tape{padding:18px 15px 22px}
+  .line.sub{flex-wrap:wrap}
+  h1{font-size:22px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <div class="eyebrow" id="eyebrow"></div>
+    <h1>亲亲，也要明算账</h1>
+  </div>
+  <div class="who">
+    <label class="who-f"><span class="dot a"></span>
+      <input class="name-in a" id="nameA" maxlength="8" aria-label="第一个人的名字"></label>
+    <label class="who-f"><span class="dot b"></span>
+      <input class="name-in b" id="nameB" maxlength="8" aria-label="第二个人的名字"></label>
+  </div>
+</header>
+
+<main class="grid">
+  <section class="tape-wrap">
+    <div class="edge top-edge"></div>
+    <div class="tape">
+
+      <div class="empty" id="empty">
+        <div class="empty-mark">▚▚▚</div>
+        <h2>先拍一张小票</h2>
+        <p>每一行默认对半分。点一下就能把某样东西划给其中一个人，税费会自动跟着走。</p>
+        <button class="btn primary" id="emptyScan">扫描小票</button>
+        <button class="btn ghost" id="emptyManual">手动输入</button>
+      </div>
+
+      <div id="sheet" hidden>
+        <div class="head">
+          <input class="merch" id="merch" placeholder="商家名称" aria-label="商家">
+          <input class="date" id="date" type="date" aria-label="日期">
+        </div>
+        <div class="rule"></div>
+        <div class="printing" id="printing" hidden><i></i><i></i><i></i><em>正在识别</em></div>
+        <ul class="items" id="items"></ul>
+        <button class="add-line" id="addLine">＋ 添加一行</button>
+        <div class="rule"></div>
+        <div class="adj" id="adj"></div>
+        <div class="rule bold"></div>
+        <div class="line total">
+          <span class="lbl">合计</span><span class="leader"></span>
+          <span class="price big" id="grand">$0.00</span>
+        </div>
+        <div class="warn" id="warn" hidden></div>
+        <div class="stars">＊ ＊ ＊　小 票 结 束　＊ ＊ ＊</div>
+      </div>
+
+    </div>
+    <div class="edge bot-edge"></div>
+  </section>
+
+  <aside class="side">
+    <div class="card">
+      <div class="card-h"><span>本次小票</span></div>
+      <div class="person a">
+        <span class="p-name" id="pnA"></span><span class="p-amt" id="paA">$0.00</span>
+        <div class="bar"><i id="barA"></i></div><span class="p-sub" id="psA"></span>
+      </div>
+      <div class="person b">
+        <span class="p-name" id="pnB"></span><span class="p-amt" id="paB">$0.00</span>
+        <div class="bar"><i id="barB"></i></div><span class="p-sub" id="psB"></span>
+      </div>
+      <div class="payer"><span>谁付的钱</span><span class="seg" id="payerSeg"></span></div>
+      <p class="verdict" id="verdict"></p>
+      <button class="btn primary wide" id="save" disabled>存入账本</button>
+      <p class="ok" id="savedMsg" hidden>已存入，小票已清空。</p>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><span>累计</span><button id="toggleHist" hidden>明细</button></div>
+      <p class="balance" id="balance">两清了。</p>
+      <p class="sync" id="syncNote">本机模式 · 不同步</p>
+      <ul class="hist" id="hist" hidden></ul>
+      <div id="settleBox" hidden>
+        <button class="btn ghost wide" id="settle">结清并清空</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><span>添加照片</span></div>
+      <button class="btn wide" id="scan">扫描新小票</button>
+      <button class="btn ghost wide" id="append" disabled>再加一张照片</button>
+      <p class="note">长小票分成上下两半拍，识别更准。</p>
+      <p class="err" id="err" hidden></p>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><span>设置</span><button id="toggleSet">展开</button></div>
+      <div id="setBox" hidden>
+        <label class="field"><span>后端地址（填了就两个人同步）</span>
+          <input id="backend" type="url" placeholder="https://xxx.workers.dev" autocomplete="off"></label>
+        <label class="field"><span>口令</span>
+          <input id="pass" type="password" placeholder="你们俩约定的那个" autocomplete="off"></label>
+        <div class="row2">
+          <button class="btn ghost" id="testBtn">测试连接</button>
+          <button class="btn ghost" id="pullBtn">立即同步</button>
+        </div>
+        <p class="note" id="setMsg" hidden></p>
+
+        <div class="rule" style="margin:14px 0"></div>
+        <p class="note" style="margin-top:0">没有后端时，用下面的 Key 在本机直接识别，账本只存在这台设备。</p>
+        <label class="field"><span>Anthropic API Key（本机模式，可留空）</span>
+          <input id="apiKey" type="password" placeholder="sk-ant-..." autocomplete="off"></label>
+        <label class="field"><span>本机模式用的模型</span>
+          <select id="model">
+            <option value="claude-sonnet-5">Sonnet 5（更准）</option>
+            <option value="claude-haiku-4-5-20251001">Haiku 4.5（更便宜）</option>
+          </select></label>
+        <div class="row2">
+          <button class="btn ghost" id="exportBtn">导出备份</button>
+          <button class="btn ghost" id="importBtn">导入备份</button>
+        </div>
+        <p class="note">Key 在 <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a> 申请，只存在这个浏览器里。</p>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<input type="file" id="fileNew" accept="image/*" hidden>
+<input type="file" id="fileAdd" accept="image/*" hidden>
+<input type="file" id="fileImport" accept="application/json,.json" hidden>
+
+<script>
+"use strict";
+
+/* ---------------------------------------------------------------- */
+/*  状态与存储                                                       */
+/* ---------------------------------------------------------------- */
+
+var LS = "rubao-yuanbao-ledger-v1";
+var S = {
+  names: { a: "如宝", b: "元宝" },
+  history: [],
+  tombstones: {},
+  key: "",
+  model: "claude-sonnet-5",
+  backend: "",
+  pass: "",
+  rev: 0,
+  r: blank()
+};
+
+function blank() {
+  return {
+    merchant: "", date: new Date().toISOString().slice(0, 10), items: [],
+    tax: 0, tip: 0, fees: 0, discount: 0, other: 0, stated: 0, payer: "a"
+  };
+}
+function uid() { return Math.random().toString(36).slice(2, 9); }
+function round(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+function fmt(n) { n = round(n); return (n < 0 ? "-" : "") + "$" + Math.abs(n).toFixed(2); }
+function $(id) { return document.getElementById(id); }
+
+function load() {
+  try {
+    var v = JSON.parse(localStorage.getItem(LS) || "{}");
+    if (v.names) S.names = v.names;
+    if (Array.isArray(v.history)) S.history = v.history;
+    if (v.tombstones) S.tombstones = v.tombstones;
+    if (v.key) S.key = v.key;
+    if (v.model) S.model = v.model;
+    if (v.backend) S.backend = v.backend;
+    if (v.pass) S.pass = v.pass;
+    if (v.rev) S.rev = v.rev;
+    if (v.draft && v.draft.items) S.r = v.draft;
+  } catch (e) { /* 第一次打开 */ }
+}
+var saveTimer = null;
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(function () {
+    try {
+      localStorage.setItem(LS, JSON.stringify({
+        names: S.names, history: S.history, tombstones: S.tombstones,
+        key: S.key, model: S.model, backend: S.backend, pass: S.pass,
+        rev: S.rev, draft: S.r
+      }));
+    } catch (e) {
+      showErr("这个浏览器存不下了，导出一次备份再清理一下历史。");
+    }
+  }, 250);
+}
+
+/* ---------------------------------------------------------------- */
+/*  计算                                                             */
+/* ---------------------------------------------------------------- */
+
+function compute() {
+  var r = S.r, subA = 0, subB = 0;
+  r.items.forEach(function (it) {
+    var p = Number(it.price) || 0;
+    if (it.assign === "a") subA += p;
+    else if (it.assign === "b") subB += p;
+    else { subA += p / 2; subB += p / 2; }
+  });
+  var sub = subA + subB;
+  var extras = (+r.tax || 0) + (+r.tip || 0) + (+r.fees || 0) + (+r.other || 0) - (+r.discount || 0);
+  var shareA = sub > 0 ? subA / sub : 0.5;
+  var grand = round(sub + extras);
+  var totalA = round(subA + extras * shareA);
+  return { subA: subA, subB: subB, extras: extras, shareA: shareA,
+           grand: grand, totalA: totalA, totalB: round(grand - totalA) };
+}
+
+/* ---------------------------------------------------------------- */
+/*  图片 → 小票数据                                                  */
+/* ---------------------------------------------------------------- */
+
+function toBase64(file) {
+  return new Promise(function (res, rej) {
+    var fr = new FileReader();
+    fr.onload = function () { res(fr.result); };
+    fr.onerror = function () { rej(new Error("无法读取这个文件。")); };
+    fr.readAsDataURL(file);
+  }).then(function (raw) {
+    return new Promise(function (res) {
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var scale = Math.min(1, 1600 / Math.max(img.width, img.height));
+          var cv = document.createElement("canvas");
+          cv.width = Math.round(img.width * scale);
+          cv.height = Math.round(img.height * scale);
+          cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+          res({ data: cv.toDataURL("image/jpeg", 0.82).split(",")[1], media: "image/jpeg" });
+        } catch (e) {
+          res({ data: raw.split(",")[1], media: file.type || "image/jpeg" });
+        }
+      };
+      img.onerror = function () { res({ data: raw.split(",")[1], media: file.type || "image/jpeg" }); };
+      img.src = raw;
+    });
+  });
+}
+
+var PROMPT = [
+  'Read this receipt and return ONLY a JSON object. No markdown, no fences, no commentary.',
+  '',
+  '{"m":merchant name,"d":"YYYY-MM-DD","it":[{"n":item name,"q":quantity,"p":line total before tax}],"tx":sales tax,"tp":tip,"fe":other fees or deposits,"ds":total discounts as a positive number,"tt":grand total printed on the receipt}',
+  '',
+  'Rules:',
+  '- "p" is the total printed for that line (unit price x quantity), not the unit price.',
+  '- Expand cryptic abbreviations into a readable name, but keep the receipt\'s own language — do NOT translate (e.g. "ORG BNLS CKN BRST" -> "Organic boneless chicken breast"). Keep each under 40 characters.',
+  '- Do not include subtotal, tax, tip or total lines inside "it".',
+  '- If a coupon line clearly belongs to one item, subtract it from that item\'s "p" instead of listing it.',
+  '- Use 0 for anything not printed. Numbers must be plain numbers, no currency symbols.'
+].join("\n");
+
+function scanImage(b64, media) {
+  return fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": S.key,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true"
+    },
+    body: JSON.stringify({
+      model: S.model,
+      max_tokens: 4000,
+      messages: [{ role: "user", content: [
+        { type: "image", source: { type: "base64", media_type: media, data: b64 } },
+        { type: "text", text: PROMPT }
+      ]}]
+    })
+  }).then(function (res) {
+    if (!res.ok) {
+      return res.json().catch(function () { return {}; }).then(function (j) {
+        var msg = (j.error && j.error.message) || "";
+        if (res.status === 401) throw new Error("API Key 不对，或者已经失效了。去设置里重新填一个。");
+        if (res.status === 429) throw new Error("请求太频繁了，等一会儿再试。");
+        if (res.status === 400 && /credit|balance/i.test(msg)) throw new Error("账户余额不足，去 console 充一点。");
+        throw new Error("请求失败（" + res.status + "）" + (msg ? "：" + msg : ""));
+      });
+    }
+    return res.json();
+  }).then(function (data) {
+    var text = (data.content || []).map(function (c) {
+      return c.type === "text" ? c.text : "";
+    }).join("").replace(/```json|```/g, "").trim();
+    var s = text.indexOf("{"), e = text.lastIndexOf("}");
+    if (s < 0 || e < 0) throw new Error("没识别出内容。换一张更清晰、正对着拍的照片试试。");
+    var p;
+    try { p = JSON.parse(text.slice(s, e + 1)); }
+    catch (err) { throw new Error("小票太长，一次读不完。分成上下两半拍，用「再加一张照片」。"); }
+    return {
+      merchant: p.m || "", date: p.d || "",
+      items: (p.it || []).map(function (i) {
+        return { id: uid(), name: String(i.n || "商品"), qty: Number(i.q) || 1,
+                 price: round(i.p), assign: "both" };
+      }),
+      tax: round(p.tx), tip: round(p.tp), fees: round(p.fe),
+      discount: round(p.ds), stated: round(p.tt)
+    };
+  });
+}
+
+/* ---------------------------------------------------------------- */
+/*  后端同步                                                         */
+/* ---------------------------------------------------------------- */
+
+function hasBackend() { return !!(S.backend && S.pass); }
+function api(path) { return S.backend.replace(/\/+$/, "") + path; }
+function authHeaders() {
+  return { "content-type": "application/json", "authorization": "Bearer " + S.pass };
+}
+
+function setSync(text, cls) {
+  var el = $("syncNote");
+  el.textContent = text;
+  el.className = "sync" + (cls ? " " + cls : "");
+}
+
+function scanViaBackend(b64, media) {
+  return fetch(api("/scan"), {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ data: b64, media: media })
+  }).then(function (res) {
+    return res.json().catch(function () { return {}; }).then(function (j) {
+      if (!res.ok) throw new Error(j.error || ("后端返回 " + res.status));
+      return j;
+    });
+  });
+}
+
+function mergeInto(remote) {
+  var tomb = {};
+  Object.keys(remote.tombstones || {}).forEach(function (k) { tomb[k] = remote.tombstones[k]; });
+  Object.keys(S.tombstones || {}).forEach(function (k) { tomb[k] = S.tombstones[k]; });
+  var map = {};
+  (remote.history || []).forEach(function (h) { map[h.id] = h; });
+  (S.history || []).forEach(function (h) { map[h.id] = h; });
+  S.tombstones = tomb;
+  S.history = Object.keys(map).map(function (k) { return map[k]; })
+    .filter(function (h) { return !tomb[h.id]; })
+    .sort(function (x, y) {
+      return (y.date || "").localeCompare(x.date || "") || (y.ts || 0) - (x.ts || 0);
+    });
+  if (remote.names && !S.namesTouched) S.names = remote.names;
+}
+
+var pulling = false;
+function pull(quiet) {
+  if (!hasBackend() || pulling) return Promise.resolve();
+  pulling = true;
+  if (!quiet) setSync("同步中…");
+  return fetch(api("/ledger"), { headers: authHeaders() })
+    .then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (j) {
+        if (!res.ok) throw new Error(j.error || ("后端返回 " + res.status));
+        return j;
+      });
+    })
+    .then(function (remote) {
+      mergeInto(remote);
+      S.rev = remote.rev || 0;
+      renderAll(); save();
+      setSync("已同步 · " + new Date().toTimeString().slice(0, 5), "live");
+    })
+    .catch(function (e) { setSync("同步失败：" + e.message, "bad"); })
+    .then(function () { pulling = false; });
+}
+
+function push(retry) {
+  if (!hasBackend()) { save(); return Promise.resolve(); }
+  setSync("上传中…");
+  return fetch(api("/ledger"), {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify({
+      rev: S.rev, names: S.names, history: S.history, tombstones: S.tombstones
+    })
+  }).then(function (res) {
+    return res.json().catch(function () { return {}; }).then(function (j) {
+      if (res.status === 409 && j.current && !retry) {
+        // 另一边先写了，合并之后再来一次
+        mergeInto(j.current);
+        S.rev = j.current.rev || 0;
+        renderAll();
+        return push(true);
+      }
+      if (!res.ok) throw new Error(j.error || ("后端返回 " + res.status));
+      S.rev = j.rev || 0;
+      save();
+      setSync("已同步 · " + new Date().toTimeString().slice(0, 5), "live");
+    });
+  }).catch(function (e) {
+    save();
+    setSync("上传失败，已存在本地：" + e.message, "bad");
+  });
+}
+
+function handleFile(file, append) {
+  if (!file) return;
+  if (!hasBackend() && !S.key) {
+    showErr("先在「设置」里填后端地址和口令，或者填一个本机用的 API Key。");
+    openSettings();
+    return;
+  }
+  showErr("");
+  $("printing").hidden = false;
+  $("empty").hidden = true;
+  $("sheet").hidden = false;
+  setBusy(true);
+  toBase64(file).then(function (o) {
+    return hasBackend() ? scanViaBackend(o.data, o.media) : scanImage(o.data, o.media);
+  }).then(function (res) {
+    if (append) {
+      S.r.items = S.r.items.concat(res.items);
+      ["tax", "tip", "fees", "discount", "stated"].forEach(function (k) {
+        S.r[k] = round(S.r[k] + res[k]);
+      });
+    } else {
+      var payer = S.r.payer;
+      S.r = blank();
+      S.r.merchant = res.merchant; S.r.date = res.date || S.r.date;
+      S.r.items = res.items; S.r.tax = res.tax; S.r.tip = res.tip;
+      S.r.fees = res.fees; S.r.discount = res.discount; S.r.stated = res.stated;
+      S.r.payer = payer;
+    }
+    renderAll();
+    save();
+  }).catch(function (e) {
+    showErr(e.message || "识别这张图片时出了问题。");
+    renderAll();
+  }).then(function () {
+    $("printing").hidden = true;
+    setBusy(false);
+  });
+}
+
+function setBusy(b) {
+  $("scan").disabled = b;
+  $("scan").textContent = b ? "识别中…" : "扫描新小票";
+  $("append").disabled = b || !S.r.items.length;
+}
+function showErr(m) {
+  var el = $("err");
+  el.textContent = m || "";
+  el.hidden = !m;
+}
+
+/* ---------------------------------------------------------------- */
+/*  渲染                                                             */
+/* ---------------------------------------------------------------- */
+
+var ADJ = [["tax", "销售税"], ["tip", "小费"], ["fees", "其他费用 / 押金"],
+           ["discount", "折扣"], ["other", "其他"]];
+
+function numInput(get, set) {
+  var el = document.createElement("input");
+  el.className = "num";
+  el.setAttribute("inputmode", "decimal");
+  el.value = (Number(get()) || 0).toFixed(2);
+  el.addEventListener("focus", function () { el.select(); });
+  el.addEventListener("input", function () {
+    set(round(parseFloat(el.value.replace(/[^0-9.\-]/g, "")) || 0));
+    refresh(); save();
+  });
+  el.addEventListener("blur", function () { el.value = (Number(get()) || 0).toFixed(2); });
+  el.addEventListener("keydown", function (e) { if (e.key === "Enter") el.blur(); });
+  return el;
+}
+
+function segEl(getVal, setVal, omitBoth) {
+  var wrap = document.createElement("span");
+  wrap.className = "seg";
+  var keys = omitBoth ? ["a", "b"] : ["a", "both", "b"];
+  keys.forEach(function (k) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.dataset.k = k;
+    b.addEventListener("click", function () { setVal(k); refresh(); save(); });
+    wrap.appendChild(b);
+  });
+  wrap._sync = function () {
+    var v = getVal();
+    Array.prototype.forEach.call(wrap.children, function (b) {
+      var k = b.dataset.k;
+      b.textContent = k === "both" ? "半" : (S.names[k] || "").slice(0, 1) || k.toUpperCase();
+      b.title = k === "both" ? "对半分" : S.names[k];
+      b.className = v === k ? "on " + k : "";
+    });
+  };
+  wrap._sync();
+  return wrap;
+}
+
+var rows = [];
+
+function renderItems() {
+  var ul = $("items");
+  ul.innerHTML = "";
+  rows = [];
+  S.r.items.forEach(function (it) {
+    var li = document.createElement("li");
+    li.className = "item";
+
+    var l1 = document.createElement("div");
+    l1.className = "line";
+    var name = document.createElement("input");
+    name.className = "iname";
+    name.value = it.name;
+    name.placeholder = "商品名";
+    name.setAttribute("aria-label", "商品名");
+    name.addEventListener("input", function () { it.name = name.value; save(); });
+    l1.appendChild(name);
+    if (it.qty > 1) {
+      var q = document.createElement("span");
+      q.className = "qty"; q.textContent = "×" + it.qty;
+      l1.appendChild(q);
+    }
+    var lead = document.createElement("span"); lead.className = "leader"; l1.appendChild(lead);
+    var pw = document.createElement("span"); pw.className = "price";
+    pw.appendChild(numInput(function () { return it.price; },
+                            function (v) { it.price = v; }));
+    l1.appendChild(pw);
+
+    var l2 = document.createElement("div");
+    l2.className = "line sub";
+    var seg = segEl(function () { return it.assign; },
+                    function (v) { it.assign = v; }, false);
+    l2.appendChild(seg);
+    var note = document.createElement("span"); note.className = "split-note"; l2.appendChild(note);
+    var lead2 = document.createElement("span"); lead2.className = "leader thin"; l2.appendChild(lead2);
+    var del = document.createElement("button");
+    del.className = "x"; del.textContent = "✕";
+    del.setAttribute("aria-label", "删除这一行");
+    del.addEventListener("click", function () {
+      S.r.items = S.r.items.filter(function (x) { return x.id !== it.id; });
+      renderAll(); save();
+    });
+    l2.appendChild(del);
+
+    li.appendChild(l1); li.appendChild(l2);
+    ul.appendChild(li);
+    rows.push({ it: it, pw: pw, note: note, seg: seg });
+  });
+}
+
+function renderAdj() {
+  var box = $("adj");
+  box.innerHTML = "";
+  ADJ.forEach(function (pair) {
+    var k = pair[0];
+    var line = document.createElement("div");
+    line.className = "line";
+    var lbl = document.createElement("span");
+    lbl.className = "lbl"; lbl.textContent = pair[1];
+    var lead = document.createElement("span"); lead.className = "leader";
+    var pw = document.createElement("span"); pw.className = "price";
+    pw.appendChild(numInput(function () { return S.r[k]; }, function (v) { S.r[k] = v; }));
+    line.appendChild(lbl); line.appendChild(lead); line.appendChild(pw);
+    box.appendChild(line);
+  });
+  var p = document.createElement("p");
+  p.className = "allot"; p.id = "allot";
+  box.appendChild(p);
+}
+
+function renderHistory() {
+  var ul = $("hist"), any = S.history.length > 0;
+  $("toggleHist").hidden = !any;
+  $("settleBox").hidden = !any;
+  if (!any) { ul.hidden = true; ul.innerHTML = ""; return; }
+  ul.innerHTML = "";
+  S.history.forEach(function (h) {
+    var li = document.createElement("li");
+    var d = document.createElement("span");
+    d.className = "h-day"; d.textContent = (h.date || "").slice(5);
+    var n = document.createElement("span");
+    n.className = "h-name"; n.textContent = h.merchant;
+    n.title = "点一下拿回小票继续改";
+    n.style.cursor = "pointer";
+    n.addEventListener("click", function () {
+      if (S.r.items.length && !confirm("当前小票还没存，拿回这一笔会覆盖掉它。继续？")) return;
+      S.r = h.receipt ? JSON.parse(JSON.stringify(h.receipt)) : blank();
+      S.history = S.history.filter(function (x) { return x.id !== h.id; });
+      S.tombstones[h.id] = Date.now();
+      renderAll(); save(); push();
+    });
+    var a = document.createElement("span");
+    a.className = "h-amt"; a.textContent = fmt(h.grand);
+    var x = document.createElement("button");
+    x.className = "x"; x.textContent = "✕"; x.setAttribute("aria-label", "删除");
+    x.addEventListener("click", function () {
+      S.history = S.history.filter(function (y) { return y.id !== h.id; });
+      S.tombstones[h.id] = Date.now();
+      renderAll(); save(); push();
+    });
+    li.appendChild(d); li.appendChild(n); li.appendChild(a); li.appendChild(x);
+    ul.appendChild(li);
+  });
+}
+
+function refresh() {
+  var c = compute(), n = S.names;
+
+  $("eyebrow").textContent = n.a + " ♡ " + n.b + " 的小账本";
+  $("pnA").textContent = n.a;
+  $("pnB").textContent = n.b;
+
+  rows.forEach(function (row) {
+    row.pw.className = "price " + row.it.assign;
+    row.note.textContent = row.it.assign === "both"
+      ? "各 " + fmt(row.it.price / 2)
+      : "全部算 " + n[row.it.assign] + " 的";
+    row.seg._sync();
+  });
+
+  var allot = $("allot");
+  if (allot) {
+    allot.textContent = "以上按各自买的金额，" + Math.round(c.shareA * 100) +
+      " : " + (100 - Math.round(c.shareA * 100)) + " 分摊";
+  }
+
+  $("grand").textContent = fmt(c.grand);
+
+  var mis = (S.r.stated > 0 && Math.abs(S.r.stated - c.grand) > 0.02)
+    ? round(S.r.stated - c.grand) : 0;
+  var warn = $("warn");
+  warn.hidden = !mis;
+  if (mis) {
+    warn.innerHTML = "";
+    warn.appendChild(document.createTextNode(
+      "小票上写的是 " + fmt(S.r.stated) + "，比逐行加起来" +
+      (mis > 0 ? "多" : "少") + "了 " + fmt(Math.abs(mis)) + "。"));
+    var b = document.createElement("button");
+    b.className = "btn tiny"; b.textContent = "把差额记到「其他」";
+    b.addEventListener("click", function () {
+      S.r.other = round(S.r.other + mis);
+      renderAll(); save();
+    });
+    warn.appendChild(b);
+  }
+
+  $("paA").textContent = fmt(c.totalA);
+  $("paB").textContent = fmt(c.totalB);
+  $("barA").style.width = (c.shareA * 100).toFixed(1) + "%";
+  $("barB").style.width = (100 - c.shareA * 100).toFixed(1) + "%";
+  $("psA").textContent = "商品 " + fmt(c.subA) + " ＋ 税费 " + fmt(c.totalA - c.subA);
+  $("psB").textContent = "商品 " + fmt(c.subB) + " ＋ 税费 " + fmt(c.totalB - c.subB);
+  payerSeg._sync();
+
+  $("verdict").textContent = c.grand === 0 ? "还没有要结算的金额。"
+    : S.r.payer === "a" ? n.b + " 要还 " + n.a + " " + fmt(c.totalB)
+                        : n.a + " 要还 " + n.b + " " + fmt(c.totalA);
+
+  var bal = round(S.history.reduce(function (s, h) {
+    return s + (h.payer === "a" ? h.totalB : -h.totalA);
+  }, 0));
+  $("balance").textContent = bal === 0 ? "两清了。"
+    : bal > 0 ? n.b + " 共欠 " + n.a + " " + fmt(bal)
+              : n.a + " 共欠 " + n.b + " " + fmt(-bal);
+
+  var has = S.r.items.length > 0;
+  var scanning = !$("printing").hidden;
+  $("save").disabled = !has;
+  $("append").disabled = !has || $("scan").disabled;
+  $("empty").hidden = has || scanning;
+  $("sheet").hidden = !has && !scanning;
+}
+
+function renderAll() {
+  $("nameA").value = S.names.a;
+  $("nameB").value = S.names.b;
+  $("merch").value = S.r.merchant;
+  $("date").value = S.r.date;
+  renderItems();
+  renderAdj();
+  renderHistory();
+  refresh();
+}
+
+/* ---------------------------------------------------------------- */
+/*  事件                                                             */
+/* ---------------------------------------------------------------- */
+
+var payerSeg = segEl(function () { return S.r.payer; },
+                     function (v) { S.r.payer = v; }, true);
+$("payerSeg").replaceWith(payerSeg);
+payerSeg.id = "payerSeg";
+
+["a", "b"].forEach(function (k) {
+  var el = $(k === "a" ? "nameA" : "nameB");
+  el.addEventListener("input", function () {
+    S.names[k] = el.value || (k === "a" ? "如宝" : "元宝");
+    S.namesTouched = true;
+    refresh(); save(); schedulePush();
+  });
+});
+
+$("merch").addEventListener("input", function () { S.r.merchant = this.value; save(); });
+$("date").addEventListener("input", function () { S.r.date = this.value; save(); });
+
+$("addLine").addEventListener("click", function () {
+  S.r.items.push({ id: uid(), name: "", qty: 1, price: 0, assign: "both" });
+  renderAll(); save();
+});
+$("emptyManual").addEventListener("click", function () {
+  S.r.items.push({ id: uid(), name: "", qty: 1, price: 0, assign: "both" });
+  renderAll(); save();
+  var last = document.querySelectorAll(".iname");
+  if (last.length) last[last.length - 1].focus();
+});
+
+$("scan").addEventListener("click", function () { $("fileNew").click(); });
+$("emptyScan").addEventListener("click", function () { $("fileNew").click(); });
+$("append").addEventListener("click", function () { $("fileAdd").click(); });
+$("fileNew").addEventListener("change", function () {
+  handleFile(this.files[0], false); this.value = "";
+});
+$("fileAdd").addEventListener("change", function () {
+  handleFile(this.files[0], true); this.value = "";
+});
+
+$("save").addEventListener("click", function () {
+  var c = compute();
+  S.history.unshift({
+    id: uid(), ts: Date.now(),
+    merchant: S.r.merchant || "未命名小票",
+    date: S.r.date || new Date().toISOString().slice(0, 10),
+    payer: S.r.payer, totalA: c.totalA, totalB: c.totalB, grand: c.grand,
+    receipt: JSON.parse(JSON.stringify(S.r))
+  });
+  var payer = S.r.payer;
+  S.r = blank();
+  S.r.payer = payer;
+  renderAll(); save(); push();
+  var msg = $("savedMsg");
+  msg.hidden = false;
+  setTimeout(function () { msg.hidden = true; }, 3000);
+});
+
+$("toggleHist").addEventListener("click", function () {
+  var ul = $("hist");
+  ul.hidden = !ul.hidden;
+  this.textContent = ul.hidden ? "明细" : "收起";
+});
+
+$("settle").addEventListener("click", function () {
+  if (!confirm("清空全部 " + S.history.length + " 条记录？建议先导出一次备份。")) return;
+  S.history.forEach(function (h) { S.tombstones[h.id] = Date.now(); });
+  S.history = [];
+  renderAll(); save(); push();
+});
+
+/* 设置 */
+function openSettings() {
+  $("setBox").hidden = false;
+  $("toggleSet").textContent = "收起";
+  $("apiKey").focus();
+}
+$("toggleSet").addEventListener("click", function () {
+  var box = $("setBox");
+  box.hidden = !box.hidden;
+  this.textContent = box.hidden ? "展开" : "收起";
+});
+$("apiKey").addEventListener("input", function () { S.key = this.value.trim(); save(); });
+$("model").addEventListener("change", function () { S.model = this.value; save(); });
+
+$("exportBtn").addEventListener("click", function () {
+  var blob = new Blob([JSON.stringify({
+    names: S.names, history: S.history, exportedAt: new Date().toISOString()
+  }, null, 2)], { type: "application/json" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "小账本备份-" + new Date().toISOString().slice(0, 10) + ".json";
+  a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+});
+$("importBtn").addEventListener("click", function () { $("fileImport").click(); });
+$("fileImport").addEventListener("change", function () {
+  var f = this.files[0];
+  this.value = "";
+  if (!f) return;
+  var fr = new FileReader();
+  fr.onload = function () {
+    try {
+      var v = JSON.parse(fr.result);
+      if (!Array.isArray(v.history)) throw new Error("bad");
+      var mode = confirm("确定＝把备份合并进现有记录\n取消＝用备份完全替换");
+      if (mode) {
+        var seen = {};
+        S.history.concat(v.history).forEach(function (h) { seen[h.id] = h; });
+        S.history = Object.keys(seen).map(function (k) { return seen[k]; })
+          .sort(function (x, y) { return (y.date || "").localeCompare(x.date || ""); });
+      } else {
+        S.history = v.history;
+      }
+      if (v.names) S.names = v.names;
+      renderAll(); save(); push();
+      showErr("");
+    } catch (e) {
+      showErr("这个文件读不出来，确认是本页导出的备份。");
+    }
+  };
+  fr.readAsText(f);
+});
+
+/* 后端设置 */
+var pushTimer = null;
+function schedulePush() {
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(function () { push(); }, 1200);
+}
+function setMsg(m, bad) {
+  var el = $("setMsg");
+  el.textContent = m || "";
+  el.hidden = !m;
+  el.style.color = bad ? "var(--alert)" : "var(--good)";
+}
+
+$("backend").addEventListener("input", function () {
+  S.backend = this.value.trim().replace(/\/+$/, "");
+  save(); updateSyncLabel();
+});
+$("pass").addEventListener("input", function () {
+  S.pass = this.value;
+  save(); updateSyncLabel();
+});
+
+$("testBtn").addEventListener("click", function () {
+  if (!S.backend) { setMsg("先填后端地址。", true); return; }
+  setMsg("测试中…");
+  fetch(api("/health")).then(function (r) { return r.json(); }).then(function (j) {
+    var miss = [];
+    if (!j.hasApiKey) miss.push("ANTHROPIC_API_KEY");
+    if (!j.hasPassword) miss.push("APP_PASSWORD");
+    if (!j.hasLedgerKV) miss.push("KV 绑定 LEDGER");
+    if (miss.length) { setMsg("后端连上了，但还缺：" + miss.join("、"), true); return; }
+    return fetch(api("/ledger"), { headers: authHeaders() }).then(function (r) {
+      if (r.status === 401) { setMsg("地址没问题，但口令不对。", true); return; }
+      if (!r.ok) { setMsg("账本读取失败（" + r.status + "）", true); return; }
+      setMsg("一切正常，模型是 " + j.model + "。");
+      return pull(true);
+    });
+  }).catch(function (e) {
+    setMsg("连不上：" + e.message + "（地址填对了吗？）", true);
+  });
+});
+
+$("pullBtn").addEventListener("click", function () {
+  if (!hasBackend()) { setMsg("后端地址和口令都填了才能同步。", true); return; }
+  pull().then(function () { setMsg("同步完成。"); });
+});
+
+function updateSyncLabel() {
+  if (!hasBackend()) setSync("本机模式 · 不同步");
+}
+
+/* 起飞 */
+load();
+$("apiKey").value = S.key;
+$("model").value = S.model;
+$("backend").value = S.backend;
+$("pass").value = S.pass;
+renderAll();
+updateSyncLabel();
+
+if (hasBackend()) {
+  pull(true);
+  setInterval(function () { if (!document.hidden) pull(true); }, 60000);
+  window.addEventListener("focus", function () { pull(true); });
+}
+</script>
+</body>
+</html>
