@@ -966,7 +966,8 @@ function refresh() {
   $("ledger").className = "ledger" + (bal > 0 ? " owe-b" : bal < 0 ? " owe-a" : "");
 
   var meta = [];
-  if (L.open) meta.push("上次结清后 " + L.open + " 笔小票，共 " + fmt(L.openSum));
+  if (L.open) meta.push((L.lastSettle ? "上次结清后 " : "一共 ") + L.open +
+                        " 笔小票，两人总共花了 " + fmt(L.openSum));
   if (L.lastSettle) meta.push("上次结清 " + L.lastSettle.date);
   if (L.later) meta.push("这天之后还有 " + L.later + " 笔没算进来");
   $("ledgerMeta").textContent = meta.join(" · ");
